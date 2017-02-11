@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+</head>
+
+<body>
+  <h1>Hello Express</h1>
+  <h3>你好,<span id="user"></span></h3>
+  <p>最近登录：<span id="lastLoginTime"></span></p>
+  <img src="/images/img.jpg" style="border-radius: 50%;">
+  <p><a href="/admin">后台管理</a></p>
+  <h3><a href="/api">API列表</a></h3>
+  <h3><a href="/apdddi">显示错误页面</a></h3>
+  <a href="/admin/logout">退出</a>
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/cookies.js"></script>
+  <script>
+  // $.ajax({
+  //     url: '/admin/userinfo',
+  //     type: 'get'
+  //   })
+  //   .done(function(e) {
+  //     console.log(e);
+  //     if (e.status == 200) {
+  //       $('#user').text(e.name);
+  //       $('#permission').text(e.permission);
+  //       $('#lastLoginTime').text(e.lastLoginTime);
+  //     }
+  //   });
+  $(function() {
+    var user = JSON.parse(cookies.getItem('user'));
+
+    $('#user').text(user.name);
+    $('#permission').text(user.permission);
+    $('#lastLoginTime').text(user.lastLoginTime);
+  });
+
+
+  //数据库增加数据
+  // $.ajax({
+  //   url:'/api/user',
+  //   type:'post',
+  //   data:{
+  //     name:'wangwu',
+  //     age:32
+  //   }
+  // })
+  // .done(function(e) {
+  //   console.log(e);
+  // });
+
+  //更新数据
+  // $.ajax({
+  //     url: '/api/user',
+  //     type: 'put',
+  //     data: {
+  //       name: 'wangwu',
+  //       age: 33,
+  //       id: 5
+  //     }
+  //   })
+  //   .done(function(e) {
+  //     console.log(e);
+  //   });
+
+  // $.ajax({
+  //    url: '/api/user',
+  //    type: 'post',
+  //    data: {
+  //    name:'wansaddddddgwu',
+  //    age:22,
+  //    time:1486545225537,
+  //    token:'f682f0ebb4e43fb75ef93dbccc6794e30d27b3bc'
+  //    }
+  //  })
+  //  .done(function(e) {
+  //    console.log(e);
+  //  });
+  </script>
+</body>
+
+</html>

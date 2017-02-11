@@ -1,0 +1,28 @@
+{
+  "name": "myapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "pm2 start ./bin/www -i 1"
+  },
+  "devDependencies": {
+    "body-parser": "~1.16.0",
+    "compression": "^1.6.2",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.1",
+    "crypto": "^0.0.3",
+    "debug": "~2.6.0",
+    "express": "~4.14.1",
+    "express-session": "^1.15.0",
+    "helmet": "^3.4.0",
+    "jade": "~1.11.0",
+    "less-middleware": "~2.2.0",
+    "mongodb": "^2.2.22",
+    "mysql": "^2.13.0",
+    "parseurl": "^1.3.1",
+    "routes-router": "^4.2.1",
+    "send-data": "^8.0.0",
+    "serve-favicon": "~2.3.2",
+    "winston": "^2.3.1"
+  }
+}
