@@ -38,12 +38,13 @@ app.use(bodyParser.urlencoded({
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
 //全局添加处理时间
-// app.use((req, res, next) => {
-//   var start = new Date();
-//   next();
-//   var ms = new Date() - start;
-//   res.set('X-Response-Time', ms + 'ms');
-// });
+app.use((req, res, next) => {
+  var start = new Date();
+  next();
+  var ms = new Date() - start;
+  res.set('X-Response-Time', ms + 'ms');
+});
+
 
 //全局配置
 var config = require('./server/conf/session');
