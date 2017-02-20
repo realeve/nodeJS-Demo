@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "cheerio": "^0.22.0",
+    "request": "^2.79.0",
     "superagent": "^3.4.3"
   }
 }
