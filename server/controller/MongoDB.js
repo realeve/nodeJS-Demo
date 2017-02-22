@@ -1,6 +1,5 @@
 var conf = require('../conf/db');
 var MongoClient = require('mongodb').MongoClient;
-
 var url = 'mongodb://' + conf.mongodb.host + ':' + conf.mongodb.port + '/' + conf.mongodb.database;
 
 var isEmptyObject = require('../common').isEmptyObject;
