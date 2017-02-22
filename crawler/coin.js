@@ -4,6 +4,19 @@ var express = require('express'),
   fs = require('fs'),
   cheerio = require('cheerio');
 
+var conf = require('../server/conf/db');
+var MongoClient = require('mongodb').MongoClient;
+var url = 'mongodb://' + conf.mongodb.host + ':' + conf.mongodb.port + '/' + conf.mongodb.database;
+var db;
+// Use connect method to connect to the server
+// 引用mongoDB后即连接数据库，利用连接池控制连接的持续引用
+MongoClient.connect(url, (err, database) => {
+  if (err) throw err;
+  db = database;
+});
+
+//var mongodb = require('../server/controller/MongoDB');
+
 var MAX_PRODUCT_NUM = 141;
 
 var options = {
@@ -51,6 +64,76 @@ function decDetail(html) {
   });
   return data;
 }
+
+function insert(collection, data) {
+  var col = db.collection(collection);
+  col.insertMany([data], function(err, result) {
+    if (err) {
+      console.log(err);
+      return false;
+    }
+    console.log('insert Success');
+    return true;
+  });
+}
+
+function addGoodList(id) {
+  request
+    .get("http://item.chinagoldcoin.net/getDetail?detail_id=" + id)
+    .set(options)
+    .end(function(err, sres) {
+      console.log('正在查找第' + id + '条数据');
+      console.log(sres.text);
+      var data = JSON.parse(sres.text);
+      data.goodsId = id;
+      data.timeStamp = (new Date()).toLocaleString();
+      if (data.code == '000002') {
+        //读取主题/材质等信息
+        request
+          .get('http://item.chinagoldcoin.net/product_detail_' + id + '.html')
+          .set(options)
+          .end(function(err, sres) {
+            data.detail = decDetail(sres.text);
+
+            request.get('http://www.chinagoldcoin.net/views/newDetail/detail/new-more-buy.jsp?pageNo=1&pageSize=0&goodsId=' + id)
+              .end((err, sres) => {
+                data.count = JSON.parse(sres.text)[0].count;
+                return insert('goods', data);
+              });
+          });
+      } else {
+        return insert('goods', data);
+      }
+    });
+}
+
+app.get('/insert/product/', function(req, res, next) {
+  var id = req.params.id;
+  var insert = (function() {
+    var i = 1;
+    var t = setInterval(function() {
+      console.log('i=' + i);
+      addGoodList(i);
+      i++;
+      if (i > MAX_PRODUCT_NUM) {
+        clearInterval(t);
+      }
+    }, 1000);
+  })();
+});
+
+app.get('/query/product/', function(req, res, next) {
+  var col = db.collection('goods');
+  var pipeline = col.find({});
+
+  pipeline = pipeline.sort({
+    goodsId: -1
+  });
+
+  pipeline.toArray(function(err, result) {
+    res.json(result);
+  });
+});
 
 //商品信息
 app.get('/:id', function(req, res, next) {
@@ -119,6 +202,8 @@ app.get('/order/:id', function(req, res, next) {
   var id = req.params.id;
   var pageNo = 0;
   var baseUrl = 'http://www.chinagoldcoin.net/views/newDetail/detail/new-more-buy.jsp?pageNo=';
+
+  //http://www.chinagoldcoin.net/views/newDetail/detail/new-more-buy.jsp?pageNo=0&pageSize=1000&goodsId=121
 
   var url = baseUrl + pageNo + '&pageSize=100&goodsId=' + id;
   request
