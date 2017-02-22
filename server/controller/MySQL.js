@@ -43,7 +43,7 @@ module.exports = {
 
       // 建立连接，向表中插入值
       // name及age参数需修改为通用(自动从cache中获取)
-      connection.query($sql.insert, [param.name, param.age], (err, result) => {
+      connection.query($sql.user.insert, [param.name, param.age], (err, result) => {
         if (result) {
           result = {
             code: 200,
@@ -67,7 +67,7 @@ module.exports = {
     // delete by Id
     pool.getConnection((err, connection) => {
       var id = param.id;
-      connection.query($sql.delete, id, (err, result) => {
+      connection.query($sql.user.delete, id, (err, result) => {
         //错误处理
         errorHandle(err, param);
         // if (result.affectedRows > 0) {
@@ -97,7 +97,7 @@ module.exports = {
     }
 
     pool.getConnection((err, connection) => {
-      connection.query($sql.update, [param.name, param.age, +param.id], (err, result) => {
+      connection.query($sql.user.update, [param.name, param.age, +param.id], (err, result) => {
         //错误处理
         errorHandle(err, param);
         jsonWrite(req, res, result);
@@ -109,7 +109,7 @@ module.exports = {
   queryById(req, res, next) {
     var id = +req.query.id; // 为了拼凑正确的sql语句，这里要转下整数
     pool.getConnection((err, connection) => {
-      connection.query($sql.queryById, id, (err, result) => {
+      connection.query($sql.user.queryById, id, (err, result) => {
         //错误处理
         errorHandle(err);
         jsonWrite(req, res, result);
@@ -120,7 +120,7 @@ module.exports = {
   },
   queryAll(req, res, next) {
     pool.getConnection((err, connection) => {
-      connection.query($sql.queryAll, (err, result) => {
+      connection.query($sql.user.queryAll, (err, result) => {
         //错误处理
         errorHandle(err);
         jsonWrite(req, res, result);

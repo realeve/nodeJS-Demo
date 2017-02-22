@@ -22,7 +22,9 @@ var db;
 // Use connect method to connect to the server
 // 引用mongoDB后即连接数据库，利用连接池控制连接的持续引用
 MongoClient.connect(url, (err, database) => {
-  if (err) throw err;
+  if (err) {
+    errorHandle(err, '连接数据库失败：' + url);
+  }
   db = database;
 });
 
