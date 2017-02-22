@@ -1,10 +1,7 @@
-var express = require('express'),
-	app = express(),
-	request = require('superagent'),
-	fs = require('fs'),
+var request = require('superagent'),
 	cheerio = require('cheerio');
 
-var conf = require('../server/conf/db');
+var conf = require('../conf/db');
 var MongoClient = require('mongodb').MongoClient;
 var url = 'mongodb://' + conf.mongodb.host + ':' + conf.mongodb.port + '/' + conf.mongodb.database;
 var db;
@@ -14,8 +11,6 @@ MongoClient.connect(url, (err, database) => {
 	if (err) throw err;
 	db = database;
 });
-
-//var mongodb = require('../server/controller/MongoDB');
 
 var MAX_PRODUCT_NUM = 141;
 
@@ -28,17 +23,6 @@ var options = {
 	"User-Agent": "Mozilla / 5.0(Windows NT 10.0; WOW64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 56.0 .2924 .87 Safari / 537.36",
 	"X-Requested-With": "XMLHttpRequest"
 };
-
-function saveAsJson(data, filename = "data.json") {
-	fs.writeFile(__dirname + '/tmp/' + filename, data, {
-		flag: 'a'
-	}, function(err) {
-		if (err) {
-			return console.error(err);
-		}
-		console.log('写入成功');
-	});
-}
 
 function decDetail(html) {
 	var $ = cheerio.load(html);
@@ -107,7 +91,7 @@ function addGoodList(id) {
 		});
 }
 
-app.get('/insert/product/', function(req, res, next) {
+function crawler(req, res, next) {
 	var id = req.params.id;
 	var flags = new Array(MAX_PRODUCT_NUM + 1).fill(0);
 	var insert = (function() {
@@ -124,9 +108,9 @@ app.get('/insert/product/', function(req, res, next) {
 			}
 		}, 1000);
 	})();
-});
+}
 
-app.get('/query/product/', function(req, res, next) {
+function allProduct(req, res, next) {
 	var col = db.collection('goods');
 	var pipeline = col.find({}, {
 		"msg.goodsName": "name",
@@ -135,7 +119,7 @@ app.get('/query/product/', function(req, res, next) {
 		"detail.attr.year": 1,
 		"detail.attr.material": 1,
 		"detail.attr.theme": 1,
-		"detail.img":1,
+		"detail.img": 1,
 		_id: 0
 	});
 
@@ -154,15 +138,15 @@ app.get('/query/product/', function(req, res, next) {
 				year: item.detail.attr.year,
 				material: item.detail.material,
 				theme: item.detail.attr.theme,
-				img:item.detail.img[0]
+				img: item.detail.img[0]
 			};
 		});
 		res.json(product);
 	});
-});
+}
 
 //商品信息
-app.get('/:id', function(req, res, next) {
+function goods(req, res, next) {
 	var id = req.params.id;
 	request
 		.get("http://item.chinagoldcoin.net/getDetail?detail_id=" + id)
@@ -192,10 +176,10 @@ app.get('/:id', function(req, res, next) {
 				res.json(data);
 			}
 		});
-});
+}
 
 //商品属性
-app.get('/detail/:id', function(req, res, next) {
+function detail(req, res, next) {
 	var id = req.params.id;
 	var url = 'http://item.chinagoldcoin.net/product_detail_' + id + '.html';
 	request
@@ -207,10 +191,10 @@ app.get('/detail/:id', function(req, res, next) {
 			var data = decDetail(sres.text);
 			res.json(data);
 		});
-});
+}
 
 //商品价格
-app.get('/product/:id', function(req, res, next) {
+function product(req, res, next) {
 	var id = req.params.id;
 	request
 		.get("http://item.chinagoldcoin.net/getDetail?detail_id=" + id)
@@ -224,10 +208,10 @@ app.get('/product/:id', function(req, res, next) {
 			data.timeStamp = (new Date()).toLocaleString();
 			res.json(data);
 		});
-});
+}
 
 //订单交易记录
-app.get('/order/:id', function(req, res, next) {
+function order(req, res, next) {
 	var id = req.params.id;
 	var pageNo = 0;
 	var baseUrl = 'http://www.chinagoldcoin.net/views/newDetail/detail/new-more-buy.jsp?pageNo=';
@@ -244,54 +228,13 @@ app.get('/order/:id', function(req, res, next) {
 			var data = sres.text;
 			res.send(data);
 		});
-});
+}
 
-// function getPageAsync(url) {
-// 	return new Promise((resolve, reject) => {
-// 		console.log('正在爬取:' + url);
-// 		request
-// 			.get(url)
-// 			.end(function(err, res) {
-// 				if (err) {
-// 					reject(err);
-// 				}
-// 				resolve(res.text);
-// 			});
-// 	});
-// }
-
-// app.get('/course/:uid', function(req, res, next) {
-
-// 	var courseList = [728, 637, 348, 259, 197, 134, 75];
-
-// 	var baseUrl = options.Origin + '/learn/';
-// 	var promiseArr = [];
-
-// 	courseList.forEach(function(id) {
-// 		promiseArr.push(getPageAsync(baseUrl + id));
-// 	});
-
-// 	Promise
-// 		.all(promiseArr)
-// 		.then(function(pages) {
-// 			var courseData = [];
-// 			var memberData = [];
-// 			pages.forEach(function(html) {
-// 				var course = filterHtml(html);
-// 				courseData.push(course);
-// 			});
-// 			res.send({
-// 				name: userInfo.name,
-// 				desc: userInfo.desc,
-// 				homePage: url,
-// 				data: courseData
-// 			});
-// 		})
-// 		.catch(function(e) {
-// 			next(e);
-// 		});
-// });
-
-app.listen(3001, function() {
-	console.log('listening port 3001');
-});
+module.exports = {
+	order,
+	product,
+	detail,
+	goods,
+	crawler,
+	all:allProduct
+};

@@ -63,7 +63,8 @@ app.set('view engine', 'jade');
 var router = {
   index: require('./server/routes/index'),
   admin: require('./server/routes/admin'),
-  api: require('./server/routes/api')
+  api: require('./server/routes/api'),
+  coin:require('./server/routes/coin')
 };
 
 app.use('/', router.index);
@@ -71,6 +72,8 @@ app.use('/', router.index);
 app.use('/admin', router.admin);
 
 app.use('/api', router.api);
+
+app.use('/coin',router.coin);
 
 /*END:router settings*/
 

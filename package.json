@@ -17,6 +17,7 @@
     "helmet": "^3.4.0",
     "jade": "~1.11.0",
     "less-middleware": "~2.2.0",
+    "lodash": "^4.17.4",
     "mongodb": "^2.2.22",
     "mysql": "^2.13.0",
     "parseurl": "^1.3.1",
