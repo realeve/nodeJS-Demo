@@ -26,8 +26,8 @@ db.getCollection('goods').aggregate([{
 db.getCollection('goods').aggregate([{
   $match: {
     "detail.attr.theme": {
-        $nin:["其他",""]
-        }
+      $nin: ["其他", ""]
+    }
   }
 }, {
   $group: {
@@ -44,7 +44,6 @@ db.getCollection('goods').aggregate([{
     _id: 1
   }
 }]);
-
 
 db.getCollection('goods').find({
   "detail.attr.theme": "10元",
@@ -73,3 +72,35 @@ db.getCollection('goods').update(
   }
 );
 
+db.getCollection('trade').aggregate([{
+  "$unwind": "$recordList"
+}, {
+  $match: {
+    "count": {
+      $gt: 0
+    }
+  }
+}, {
+  $project: {
+    record: {
+      datetime: {
+        $substr: ["$recordList.access_date", 0, 10]
+      },
+      num: "$recordList.quantity",
+      address: "$recordList.address",
+    },
+    goodsId: 1,
+    _id: 0
+  }
+}, {
+  $group: {
+    _id: "$record.datetime",
+    total: {
+      $sum: 1
+    }
+  }
+}, {
+  $sort: {
+    "_id": 1
+  }
+}]);

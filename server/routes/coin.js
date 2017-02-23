@@ -8,8 +8,25 @@ router.get('/', function(req, res, next) {
 	res.sendFile(process.cwd() + assertsDir + '/coin.html');
 });
 
-router.get('crawler', function(req, res, next) {
-	coin.crawler(req, res, next);
+router.get('/static/date/:id', function(req, res, next) {
+	var id = req.params.id;
+	coin.static.date(req, res, id);
+});
+
+router.get('/static/province', function(req, res, next) {
+	coin.static.province(req, res, next);
+});
+
+router.get('/crawler/detail', function(req, res, next) {
+	coin.crawler.crawlerDetail(req, res, next);
+});
+
+router.get('/crawler/record/:id', function(req, res, next) {
+	coin.crawler.crawlerTradeRecordById(req, res, next);
+});
+
+router.get('/crawler/record/all', function(req, res, next) {
+	coin.crawler.crawlerTradeRecord(req, res, next);
 });
 
 router.get('/all', function(req, res, next) {

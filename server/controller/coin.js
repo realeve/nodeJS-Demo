@@ -91,8 +91,7 @@ function addGoodList(id) {
 		});
 }
 
-function crawler(req, res, next) {
-	var id = req.params.id;
+function crawlerDetail(req, res, next) {
 	var flags = new Array(MAX_PRODUCT_NUM + 1).fill(0);
 	var insert = (function() {
 		var i = 1;
@@ -108,6 +107,175 @@ function crawler(req, res, next) {
 			}
 		}, 1000);
 	})();
+}
+
+function getRecordAsync(option, url) {
+	return new Promise((resolve, reject) => {
+		console.log('正在读取第 ' + option.goodsId + ' 条交易记录,第' + option.pageNo + '页,query=' + JSON.stringify(option));
+		request
+			.get(url)
+			.query(option)
+			.end(function(err, res) {
+				if (err) {
+					reject(err);
+				}
+				resolve(JSON.parse(res.text));
+			});
+	});
+}
+
+//分段读取单条产品的交易记录
+const crawlerOneTradeRecord = function(goodsId) {
+	var option = {
+		pageNo: 1,
+		pageSize: 0,
+		goodsId
+	};
+	var baseUrl = 'http://www.chinagoldcoin.net/views/newDetail/detail/new-more-buy.jsp';
+
+	var promises = [];
+
+	getRecordAsync(option, baseUrl)
+		.then(function(data) {
+			data = data[0];
+			if (data.count === 0) {
+				insert('trade', data);
+				return Promise.resolve({
+					option
+				});
+			}
+
+			option.pageSize = 3000;
+
+			var times = Math.ceil(data.count / option.pageSize);
+
+			for (var i = 1; i <= times; i++) {
+				promises.push(getRecordAsync(Object.assign(option, {
+					pageNo: i
+				}), baseUrl));
+			}
+
+			return Promise
+				.all(promises)
+				.then(function(datas) {
+					datas.forEach(function(item) {
+						//data.recordList = data.recordList.concat(item[0].recordList);
+						//以3000条为一组分段插入
+						insert('trade', item[0]);
+					});
+					return Promise.resolve({
+						option
+					});
+				}).catch(function(e) {
+					console.log(e);
+				});
+
+		}).catch(function(e) {
+			console.log(e);
+		});
+};
+
+function crawlerTradeRecordById(req, res, next) {
+	crawlerOneTradeRecord(req.params.id).then(function(data) {
+		res.json({
+			status: 200,
+			info: 'insert success'
+		});
+	}).catch(function(e) {
+		console.log(e);
+	});
+}
+
+function crawlerTradeRecord(req, res, next) {
+	var taskList = [];
+	for (var i = 1; i <= MAX_PRODUCT_NUM; i++) {
+		taskList.push(crawlerOneTradeRecord(i));
+	}
+	Promise
+		.all(taskList)
+		.then(function(datas) {
+			res.json(datas);
+		})
+		.catch(function(e) {
+			console.log(e);
+		});
+}
+
+function staticByProvince(req, res, next) {
+	var col = db.collection('trade');
+
+	col.aggregate([{
+		"$unwind": "$recordList"
+	}, {
+		$match: {
+			"count": {
+				$gt: 0
+			},
+			"recordList.address": {
+				$ne: '暂无'
+			}
+		}
+	}, {
+		$group: {
+			_id: "$recordList.address",
+			total: {
+				$sum: "$recordList.quantity"
+			}
+		}
+	}, {
+		$sort: {
+			"total": 1
+		}
+	}], function(err, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		res.json(result);
+	});
+}
+
+function staticByDate(req, res, len = 10) {
+	//len=10 年/月/日，7 年/月，4 年
+	var col = db.collection('trade');
+	col.aggregate([{
+		"$unwind": "$recordList"
+	}, {
+		$match: {
+			"count": {
+				$gt: 0
+			}
+		}
+	}, {
+		$project: {
+			record: {
+				datetime: {
+					$substr: ["$recordList.access_date", 0, parseInt(len)]
+				},
+				num: "$recordList.quantity",
+				address: "$recordList.address",
+			},
+			goodsId: 1,
+			_id: 0
+		}
+	}, {
+		$group: {
+			_id: "$record.datetime",
+			total: {
+				$sum: 1
+			}
+		}
+	}, {
+		$sort: {
+			"_id": 1
+		}
+	}], function(err, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		res.json(result);
+	});
 }
 
 function allProduct(req, res, next) {
@@ -235,6 +403,14 @@ module.exports = {
 	product,
 	detail,
 	goods,
-	crawler,
-	all:allProduct
+	crawler: {
+		crawlerDetail,
+		crawlerTradeRecord,
+		crawlerTradeRecordById,
+	},
+	all: allProduct,
+	static: {
+		date: staticByDate,
+		province: staticByProvince
+	}
 };
