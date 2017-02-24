@@ -1,0 +1,1 @@
+[{"_id":"大熊猫及植物","saleValue":185783048,"saleNum":329021},{"_id":"贺岁系列","saleValue":29236712,"saleNum":140005},{"_id":"传统文化","saleValue":5044300,"saleNum":10358},{"_id":"护照","saleValue":1698200,"saleNum":8491},{"_id":"门票","saleValue":1002660,"saleNum":8349}]
