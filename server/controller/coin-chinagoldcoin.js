@@ -1,3 +1,40 @@
+var request = require('superagent'),
+  cheerio = require('cheerio');
+
+var options = {
+  Accept: "application/json, text/javascript, */*; q=0.01",
+  "Accept-Encoding": "gzip, deflate, sdch",
+  "Accept-Language": "zh-CN,zh;q=0.8",
+  Connection: "keep-alive",
+  Host: "item.chinagoldcoin.net",
+  "User-Agent": "Mozilla / 5.0(Windows NT 10.0; WOW64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 56.0 .2924 .87 Safari / 537.36",
+  "X-Requested-With": "XMLHttpRequest"
+};
+
+function decDetail(html) {
+  var $ = cheerio.load(html);
+
+  var attrDom = $('#spsx td span');
+
+  var attr = {
+    year: $(attrDom[0]).text(),
+    material: $(attrDom[1]).text(),
+    shape: $(attrDom[2]).text(),
+    project: $(attrDom[3]).text(),
+    refine: $(attrDom[4]).text(),
+    weight: $(attrDom[5]).text(),
+    value: $(attrDom[6]).text(),
+    theme: $(attrDom[7]).text(),
+  };
+  var data = {
+    img: [],
+    attr
+  };
+  $('#photoGallery img').each(function() {
+    data.img.push($(this).attr('src'));
+  });
+  return data;
+}
 //商品信息
 function goods(req, res, next) {
   var id = req.params.id;

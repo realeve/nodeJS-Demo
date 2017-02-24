@@ -398,3 +398,53 @@ function getGoodsOption(data, title) {
     }]
   };
 }
+
+function getDistribOption(data) {
+  return {
+    title: {
+      text: '产品构成(按主题及材质分类)',
+      x: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: "{a} <br/>{b} : {c} ({d}%)"
+    },
+    toolbox: {
+      show: true,
+      feature: {
+        mark: {
+          show: true
+        },
+        dataView: {
+          show: true,
+          readOnly: false
+        },
+        magicType: {
+          show: true,
+          type: ['pie', 'funnel']
+        },
+        restore: {
+          show: true
+        },
+        saveAsImage: {
+          show: true
+        }
+      }
+    },
+    calculable: true,
+    series: [{
+      name: '按主题',
+      type: 'pie',
+      radius: [30, '50%'],
+      center: ['25%', '50%'],
+      data: data.theme
+    }, {
+      name: '按材质',
+      type: 'pie',
+      radius: [30, '50%'],
+      center: ['75%', '50%'],
+      data: data.material
+    }]
+  };
+
+}

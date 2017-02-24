@@ -1,80 +1,41 @@
+const CHART_NUM = 10;
 const store = new Vuex.Store({
-  state: {
-    goods: [],
+  state: {}
+});
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    selected: '',
     chart: [],
-    records: {
-      day: ''
-    },
     saleInfo: {
       num: 0,
       sum: 0,
       avgPrice: 0,
       users: 37447,
       orderNum: 218404,
-      salesReturn: 3239
+      salesReturn: 3239,
+      goodsNum: 140
     },
     popular: {
       byValue: [],
       byNum: []
-    },
-    options: ''
-  },
-  getters: {
-    sales: () => {
-      var sales = {
-        goodsNum: store.state.goods.length,
-        distrib: []
-      };
-      var arrDistrib = [],
-        arrTemp = [];
-      store.state.goods.map(function(item) {
-        arrDistrib.push((item.price / 500).toFixed(0) * 500);
-      });
-      arrDistrib.forEach(function(item) {
-        if (typeof arrTemp[item] == 'undefined') {
-          arrTemp[item] = 0;
-        }
-        arrTemp[item]++;
-      });
-      arrTemp.map(function(item, i) {
-        if (typeof item != 'undefined') {
-          sales.distrib.push({
-            name: i,
-            value: item
-          });
-        }
-      });
-      return sales;
     }
-  }
-});
-
-var app = new Vue({
-  el: '#app',
-  store,
-  data: {
-    selected: ''
   },
-  computed: {
-    sales: () => {
-      return store.getters.sales;
-    },
-    popular: () => {
-      return store.state.popular;
-    },
-    chart: () => {
-      return store.state.chart;
-    },
-    records: () => {
-      return store.state.records;
-    },
-    saleInfo: () => {
-      return store.state.saleInfo;
+  watch: {
+    selected: function(val) {
+      var title = this.popular.byValue[val].name;
+      var goodsId = this.popular.byValue[val].goodsId;
+      axios.get('/data/goods/goods' + goodsId + '.json')
+        .then((res) => {
+          var data = res.data;
+          this.chart[8].setOption(getGoodsOption(data, title));
+        });
     }
   },
   created: function() {
 
-    for (var i = 0; i <= 9; i++) {
+    for (var i = 0; i <= CHART_NUM; i++) {
       this.chart[i] = echarts.init(document.getElementById('chart' + i));
     }
     //销量
@@ -110,11 +71,12 @@ var app = new Vue({
         this.chart[9].setOption(option);
       });
 
-    //axios.get('/coin/all')
-    axios.get('/data/goods.json')
-      .then(function(response) {
-        response = response.data;
-        store.state.goods = response.data;
+    //产品分布 | 价格、主题、材质
+    axios.get('/data/product-distrib.json')
+      .then((response) => {
+        var distrib = response.data;
+        this.chart[0].setOption(getGoodsDistribOption(distrib.price));
+        this.chart[10].setOption(getDistribOption(distrib));
       })
       .catch(function(error) {
         console.log(error);
@@ -124,7 +86,6 @@ var app = new Vue({
     axios.get('/data/byday.json')
       .then((res) => {
         var data = res.data;
-        store.state.records.day = data;
         var option = getRecordOption(data, '每日');
         this.chart[3].setOption(option);
       });
@@ -157,8 +118,7 @@ var app = new Vue({
         axios.get('/data/register-province-map.json')
           .then((res) => {
             var dataRegister = res.data;
-            this.chart[7].setOption(getRegisterMapOptionByProvince(dataRegister
-));
+            this.chart[7].setOption(getRegisterMapOptionByProvince(dataRegister));
             this.chart[4].setOption(getRecordOptionByProvince(data, dataRegister));
           });
       });
@@ -168,24 +128,6 @@ var app = new Vue({
         var data = res.data;
         this.chart[5].setOption(getRecordMapOptionByProvince(data));
       });
-  },
-  mounted: function() {
-    var that = this;
-    setTimeout(function() {
-      var option = getGoodsDistribOption(that.sales.distrib);
-      that.chart[0].setOption(option);
-    }, 500);
-  },
-  watch: {
-    selected: (val) => {
-      var title = app.popular.byValue[val].name;
-      var goodsId = app.popular.byValue[val].goodsId;
-      axios.get('/data/goods/goods' + goodsId + '.json')
-        .then((res) => {
-          var data = res.data;
-          app.chart[8].setOption(getGoodsOption(data, title));
-        });
-    }
   }
 });
 
@@ -203,7 +145,6 @@ function updatePopular(data, watchData) {
         url: 'http://item.chinagoldcoin.net/product_detail_' + item._id.goodsId + '.html'
       });
     });
-    app.goodsDetailId = data[0]._id.goodsId;
   });
 }
 
@@ -215,8 +156,8 @@ function upateSaleDate(data) {
     sum += item.saleValue;
   });
   app.$nextTick(function() {
-    store.state.saleInfo.avgPrice = (sum / num).toFixed(2);
-    store.state.saleInfo.sum = (sum / 10000).toFixed(2);
-    store.state.saleInfo.num = num;
+    app.saleInfo.avgPrice = (sum / num).toFixed(2);
+    app.saleInfo.sum = (sum / 10000).toFixed(2);
+    app.saleInfo.num = num;
   });
 }

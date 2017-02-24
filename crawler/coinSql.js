@@ -672,51 +672,89 @@ db.getCollection('trade').aggregate([{
 	}
 }]);
 
-
 //saleNumById
 db.getCollection('trade').aggregate([{
-  $match: {
-    "count": {
-      $gt: 0
-    }
-  }
+	$match: {
+		"count": {
+			$gt: 0
+		}
+	}
 }, {
-  $lookup: {
-    from: "goods",
-    localField: "goodsId",
-    foreignField: "goodsId",
-    as: "goods"
-  }
+	$lookup: {
+		from: "goods",
+		localField: "goodsId",
+		foreignField: "goodsId",
+		as: "goods"
+	}
 }, {
-  "$unwind": "$recordList"
+	"$unwind": "$recordList"
 }, {
-  "$unwind": "$goods"
+	"$unwind": "$goods"
 }, {
-  $match: {
-    "recordList.handle_status": {
-      $ne: -6
-    },
-     "goodsId":68
-  }
+	$match: {
+		"recordList.handle_status": {
+			$ne: -6
+		},
+		"goodsId": 68
+	}
 }, {
-  $project: {
-    datename: {
-      $substr: ["$recordList.access_date", 0, 10]
-    },
-    sales: {
-      $multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
-    },
-    _id: 0
-  }
+	$project: {
+		datename: {
+			$substr: ["$recordList.access_date", 0, 10]
+		},
+		sales: {
+			$multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
+		},
+		_id: 0
+	}
 }, {
-  $group: {
-    _id: "$datename",
-    saleValue: {
-      $sum: "$sales"
-    }
-  }
+	$group: {
+		_id: "$datename",
+		saleValue: {
+			$sum: "$sales"
+		}
+	}
 }, {
-  $sort: {
-    "_id": 1
-  }
+	$sort: {
+		"_id": 1
+	}
 }]);
+
+//产品构成-按主题
+db.getCollection('goods').aggregate([{
+	$project: {
+		name: '$msg.goodsName',
+		theme: '$detail.attr.theme'
+	}
+}, {
+	$group: {
+		_id: '$theme',
+		total: {
+			$sum: 1
+		}
+	}
+}, {
+	$sort: {
+		total: -1
+	}
+}]);
+
+//按材料
+db.getCollection('goods').aggregate([{
+	$project: {
+		name: '$msg.goodsName',
+		theme: '$detail.attr.theme',
+		material: '$detail.attr.material'
+	}
+}, {
+	$group: {
+		_id: '$material',
+		total: {
+			$sum: 1
+		}
+	}
+}, {
+	$sort: {
+		total: -1
+	}
+}])
