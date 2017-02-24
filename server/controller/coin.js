@@ -239,36 +239,185 @@ function staticByDate(req, res, len = 10) {
 	//len=10 年/月/日，7 年/月，4 年
 	var col = db.collection('trade');
 	col.aggregate([{
-		"$unwind": "$recordList"
-	}, {
 		$match: {
 			"count": {
 				$gt: 0
 			}
 		}
 	}, {
+		$lookup: {
+			from: "goods",
+			localField: "goodsId",
+			foreignField: "goodsId",
+			as: "goods"
+		}
+	}, {
+		"$unwind": "$recordList"
+	}, {
+		"$unwind": "$goods"
+	}, {
+		$match: {
+			"recordList.handle_status": {
+				$ne: -6
+			}
+		}
+	}, {
 		$project: {
-			record: {
-				datetime: {
-					$substr: ["$recordList.access_date", 0, parseInt(len)]
-				},
-				num: "$recordList.quantity",
-				address: "$recordList.address",
+			datename: {
+				$substr: ["$recordList.access_date", 0, len]
 			},
-			goodsId: 1,
+			sales: {
+				$multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
+			},
+			saleNum: "$recordList.quantity",
 			_id: 0
 		}
 	}, {
 		$group: {
-			_id: "$record.datetime",
-			total: {
-				$sum: 1
+			_id: "$datename",
+			saleValue: {
+				$sum: "$sales"
+			},
+			saleNum: {
+				$sum: "$saleNum"
 			}
 		}
 	}, {
 		$sort: {
 			"_id": 1
 		}
+	}], function(err, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		res.json(result);
+	});
+}
+
+function staticByPopular(req, res, orderSales) {
+	var sort = orderSales == "1" ? {
+		saleValue: -1
+	} : {
+		saleNum: -1
+	};
+	var col = db.collection('trade');
+	col.aggregate([{
+
+		$match: {
+			"count": {
+				$gt: 0
+			}
+		}
+	}, {
+		$lookup: {
+			from: "goods",
+			localField: "goodsId",
+			foreignField: "goodsId",
+			as: "goods"
+		}
+	}, {
+		"$unwind": "$recordList"
+	}, {
+		"$unwind": "$goods"
+	}, {
+		$match: {
+			"recordList.handle_status": {
+				$ne: -6
+			}
+		}
+	}, {
+		$project: {
+			sales: {
+				$multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
+			},
+			saleNum: "$recordList.quantity",
+			name: "$goods.msg.goodsName",
+			price: "$goods.msg.shopPrice",
+			goodsId: "$goodsId",
+			img: "$goods.detail.img",
+			theme: "$goods.detail.attr.theme",
+			_id: 0
+		}
+	}, {
+		$group: {
+			_id: {
+				name: "$name",
+				price: "$price",
+				goodsId: "$goodsId",
+				img: "$img",
+				theme: "$theme"
+			},
+			saleValue: {
+				$sum: "$sales"
+			},
+			saleNum: {
+				$sum: "$saleNum"
+			}
+		}
+	}, {
+		$sort: sort
+	}, {
+		$limit: 10
+	}], function(err, result) {
+		if (err) {
+			console.log(err);
+			return;
+		}
+		res.json(result);
+	});
+}
+
+function staticByTheme(req, res, next) {
+	var col = db.collection('trade');
+	col.aggregate([{
+		$match: {
+			"count": {
+				$gt: 0
+			}
+		}
+	}, {
+		$lookup: {
+			from: "goods",
+			localField: "goodsId",
+			foreignField: "goodsId",
+			as: "goods"
+		}
+	}, {
+		"$unwind": "$recordList"
+	}, {
+		"$unwind": "$goods"
+	}, {
+		$match: {
+			"recordList.handle_status": {
+				$ne: -6
+			}
+		}
+	}, {
+		$project: {
+			sales: {
+				$multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
+			},
+			saleNum: "$recordList.quantity",
+			theme: "$goods.detail.attr.theme",
+			_id: 0
+		}
+	}, {
+		$group: {
+			_id: "$theme",
+			saleValue: {
+				$sum: "$sales"
+			},
+			saleNum: {
+				$sum: "$saleNum"
+			}
+		}
+	}, {
+		$sort: {
+			saleNum: -1
+		}
+	}, {
+		$limit: 5
 	}], function(err, result) {
 		if (err) {
 			console.log(err);
@@ -411,6 +560,8 @@ module.exports = {
 	all: allProduct,
 	static: {
 		date: staticByDate,
-		province: staticByProvince
+		province: staticByProvince,
+		theme: staticByTheme,
+		popular: staticByPopular
 	}
 };

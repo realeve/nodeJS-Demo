@@ -9,8 +9,17 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/static/date/:id', function(req, res, next) {
-	var id = req.params.id;
+	var id = Number.parseInt(req.params.id, 10);
 	coin.static.date(req, res, id);
+});
+
+router.get('/static/popular/:id', function(req, res, next) {
+	var id = Number.parseInt(req.params.id, 10);
+	coin.static.popular(req, res, id);
+});
+
+router.get('/static/theme', function(req, res, next) {
+	coin.static.theme(req, res, next);
 });
 
 router.get('/static/province', function(req, res, next) {

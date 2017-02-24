@@ -4,27 +4,29 @@ const store = new Vuex.Store({
     chart: [],
     records: {
       day: ''
+    },
+    saleInfo: {
+      num: 0,
+      sum: 0,
+      avgPrice: 0,
+      users: 37447
+    },
+    popular: {
+      byValue: [],
+      byNum: []
     }
   },
   getters: {
     sales: () => {
       var sales = {
-        num: 0,
-        sum: 0,
         goodsNum: store.state.goods.length,
-        avgPrice: 0,
         distrib: []
       };
       var arrDistrib = [],
         arrTemp = [];
       store.state.goods.map(function(item) {
-        sales.sum += item.sales;
-        sales.num += item.count;
-        sales.avgPrice += item.price;
         arrDistrib.push((item.price / 500).toFixed(0) * 500);
       });
-      sales.avgPrice = (sales.avgPrice / sales.goodsNum).toFixed(2);
-
       arrDistrib.forEach(function(item) {
         if (typeof arrTemp[item] == 'undefined') {
           arrTemp[item] = 0;
@@ -40,104 +42,6 @@ const store = new Vuex.Store({
         }
       });
       return sales;
-    },
-    popular: () => {
-      var obj = {
-        byValue: [],
-        byNum: []
-      };
-      var goods = store.state.goods;
-      obj.byValue = goods.slice(0, 10);
-      goods = goods.sort(function(a, b) {
-        return b.count - a.count;
-      });
-      obj.byNum = goods.slice(0, 10);
-
-      return obj;
-    },
-    static: () => {
-      var goods = store.state.goods;
-      var obj = {
-        theme: {
-          count: [],
-          sale: []
-        },
-        year: {
-          count: [],
-          sale: []
-        }
-      };
-      goods.map(function(item) {
-        if (typeof obj.theme.count[item.theme] == 'undefined') {
-          obj.theme.count[item.theme] = 0;
-          obj.theme.sale[item.theme] = 0;
-        } else {
-          obj.theme.sale[item.theme] += item.sales;
-          obj.theme.count[item.theme] += item.count;
-        }
-        if (typeof obj.year.count[item.year] == 'undefined') {
-          obj.year.count[item.year] = 0;
-          obj.year.sale[item.year] = 0;
-        } else {
-          obj.year.sale[item.year] += item.sales;
-          obj.year.count[item.year] += item.count;
-        }
-      });
-
-      var staticData = {
-        theme: {
-          count: [],
-          sale: []
-        },
-        year: {
-          count: [],
-          sale: []
-        }
-      };
-
-      for (var key in obj.theme.count) {
-        staticData.theme.count.push({
-          key: key == '' ? '无' : key,
-          val: obj.theme.count[key]
-        });
-        staticData.theme.sale.push({
-          key: key == '' ? '无' : key,
-          val: obj.theme.sale[key]
-        });
-      }
-
-      for (var key2 in obj.year.count) {
-        staticData.year.count.push({
-          key: key2 == '' ? '无' : key2,
-          val: obj.year.count[key2]
-        });
-        staticData.year.sale.push({
-          key: key2 == '' ? '无' : key2,
-          val: obj.year.sale[key2]
-        });
-      }
-      staticData.theme.count.sort(function(a, b) {
-        return b.val - a.val;
-      });
-      staticData.theme.sale.sort(function(a, b) {
-        return b.val - a.val;
-      });
-      staticData.year.count.sort(function(a, b) {
-        return b.val - a.val;
-      });
-      staticData.year.sale.sort(function(a, b) {
-        return b.val - a.val;
-      });
-      return {
-        theme: {
-          count: staticData.theme.count.slice(0, 5),
-          sale: staticData.theme.sale.slice(0, 5),
-        },
-        year: {
-          count: staticData.year.count.slice(0, 5),
-          sale: staticData.year.sale.slice(0, 5),
-        }
-      };
     }
   }
 });
@@ -150,32 +54,44 @@ var app = new Vue({
       return store.getters.sales;
     },
     popular: () => {
-      return store.getters.popular;
-    },
-    static: () => {
-      return store.getters.static;
+      return store.state.popular;
     },
     chart: () => {
       return store.state.chart;
     },
     records: () => {
       return store.state.records;
-    }
-  },
-  watch: {
-    "static.year": function() {
-      var year = this.static.year;
-      var arr = [];
-
-      arr = _.sortBy(year.sale, ['key']);
-      this.chart[1].setOption(getOption(arr.slice(0, 4), '销售额'));
+    },
+    saleInfo: () => {
+      return store.state.saleInfo;
     }
   },
   created: function() {
 
-    for (var i = 0; i <= 6; i++) {
+    for (var i = 0; i <= 7; i++) {
       this.chart[i] = echarts.init(document.getElementById('chart' + i));
     }
+    //销量
+    axios.get('/coin/static/popular/0')
+      .then((res) => {
+        var data = res.data;
+        updatePopular(data, app.popular.byNum);
+      });
+
+    //销售额
+    axios.get('/coin/static/popular/1')
+      .then((res) => {
+        var data = res.data;
+        updatePopular(data, app.popular.byValue);
+      });
+
+    axios.get('/coin/static/theme')
+      .then((res) => {
+        var data = res.data;
+        var option = getRecordOption(data, '各主题', 'bar');
+        delete option.dataZoom;
+        this.chart[6].setOption(option);
+      });
 
     //axios.get('/coin/all')
     axios.get('/js/goods.json')
@@ -191,27 +107,27 @@ var app = new Vue({
       .then((res) => {
         var data = res.data;
         store.state.records.day = data;
-        this.chart[3].setOption(getRecordOption(data));
+        var option = getRecordOption(data, '每日');
+        this.chart[3].setOption(option);
       });
 
     axios.get('/coin/static/date/7')
       .then((res) => {
         var data = res.data;
-        store.state.records.day = data;
-        this.chart[6].setOption(getRecordOption(data, '每月'));
+        var option = getRecordOption(data, '每月');
+        delete option.dataZoom;
+        this.chart[2].setOption(option);
       });
 
     axios.get('/coin/static/date/4')
       .then((res) => {
         var data = res.data;
-        var arr = [];
-        arr = data.map(function(item) {
-          return {
-            key: item._id,
-            val: item.total
-          };
-        });
-        this.chart[2].setOption(getOption(arr, '销量', 2));
+
+        upateSaleDate(data);
+
+        var option = getRecordOption(data, '每年');
+        delete option.dataZoom;
+        this.chart[1].setOption(option);
       });
 
     axios.get('/coin/static/province')
@@ -221,6 +137,7 @@ var app = new Vue({
       });
 
     this.chart[5].setOption(getRecordMapOptionByProvince());
+    this.chart[7].setOption(getRegisterMapOptionByProvince());
 
   },
   mounted: function() {
@@ -231,6 +148,36 @@ var app = new Vue({
     }, 500);
   }
 });
+
+function updatePopular(data, watchData) {
+  app.$nextTick(function() {
+    data.map((item) => {
+      watchData.push({
+        name: item._id.name,
+        price: item._id.price,
+        count: item.saleNum,
+        sales: (item.saleValue / 10000).toFixed(2),
+        theme: item._id.theme,
+        img: item._id.img[0],
+        url: 'http://item.chinagoldcoin.net/product_detail_' + item._id.goodsId + '.html'
+      });
+    });
+  });
+}
+
+function upateSaleDate(data) {
+  var num = 0,
+    sum = 0;
+  data.map(function(item) {
+    num += item.saleNum;
+    sum += item.saleValue;
+  });
+  app.$nextTick(function() {
+    store.state.saleInfo.avgPrice = (sum / num).toFixed(2);
+    store.state.saleInfo.sum = (sum / 10000).toFixed(2);
+    store.state.saleInfo.num = num;
+  });
+}
 
 function getGoodsDistribOption(data) {
   var axis = {
@@ -308,7 +255,7 @@ function getRecordMapOptionByProvince() {
   return {
     backgroundColor: '#404a59',
     title: {
-      text: '2015-2017全国各省市销售量',
+      text: '2015-2017全国各省市订单数',
       left: 'center',
       textStyle: {
         color: '#fff'
@@ -452,6 +399,204 @@ function getRecordMapOptionByProvince() {
   };
 }
 
+function getRegisterMapOptionByProvince() {
+  return {
+    backgroundColor: '#404a59',
+    title: {
+      text: '2015-2017全国各省市注册用户数',
+      left: 'center',
+      textStyle: {
+        color: '#fff'
+      }
+    },
+    tooltip: {
+      trigger: 'item'
+    },
+    visualMap: {
+      min: 0,
+      max: 3000,
+      left: 'left',
+      top: 'bottom',
+      text: ['高', '低'],
+      textStyle: {
+        color: '#fff'
+      },
+      calculable: true,
+      color: ['#aE7CeC', '#6a71ba', "#2988b8"]
+    },
+    toolbox: {
+      show: true,
+      orient: 'vertical',
+      left: 'right',
+      top: 'center',
+      feature: {
+        dataView: {
+          readOnly: false
+        },
+        restore: {},
+        saveAsImage: {}
+      }
+    },
+    series: [{
+      type: 'map',
+      mapType: 'china',
+      roam: false,
+      label: {
+        normal: {
+          show: true
+        },
+        emphasis: {
+          show: true
+        }
+      },
+      data: [{
+          "name": "北京",
+          "value": 4330.0
+        }, {
+          "name": "江苏",
+          "value": 2879.0
+        },
+
+        {
+          "name": "广东",
+          "value": 2526.0
+        },
+
+        {
+          "name": "山东",
+          "value": 2481.0
+        },
+
+        {
+          "name": "浙江",
+          "value": 2287.0
+        },
+
+        {
+          "name": "辽宁",
+          "value": 2027.0
+        },
+
+        {
+          "name": "上海",
+          "value": 1991.0
+        }, {
+          "name": "河北",
+          "value": 1892.0
+        }, {
+          "name": "山西",
+          "value": 1413.0
+        },
+
+        {
+          "name": "河南",
+          "value": 1374.0
+        },
+
+        {
+          "name": "安徽",
+          "value": 1301.0
+        },
+
+        {
+          "name": "四川",
+          "value": 1121.0
+        },
+
+        {
+          "name": "福建",
+          "value": 1068.0
+        },
+
+        {
+          "name": "湖北",
+          "value": 1050.0
+        },
+
+        {
+          "name": "黑龙江",
+          "value": 973.0
+        },
+
+        {
+          "name": "天津",
+          "value": 968.0
+        },
+
+        {
+          "name": "湖南",
+          "value": 888.0
+        },
+
+        {
+          "name": "陕西",
+          "value": 866.0
+        },
+
+        {
+          "name": "江西",
+          "value": 859.0
+        },
+
+        {
+          "name": "吉林",
+          "value": 761.0
+        }, {
+          "name": "内蒙古",
+          "value": 687.0
+        },
+
+        {
+          "name": "广西",
+          "value": 609.0
+        },
+
+        {
+          "name": "甘肃",
+          "value": 585.0
+        },
+
+        {
+          "name": "重庆",
+          "value": 569.0
+        },
+
+        {
+          "name": "云南",
+          "value": 495.0
+        },
+
+        {
+          "name": "新疆",
+          "value": 428.0
+        },
+
+        {
+          "name": "贵州",
+          "value": 322.0
+        }, {
+          "name": "宁夏",
+          "value": 263.0
+        },
+
+        {
+          "name": "海南",
+          "value": 213.0
+        },
+
+        {
+          "name": "青海",
+          "value": 151.0
+        }, {
+          "name": "西藏",
+          "value": 42.0
+        }
+      ]
+
+    }]
+  };
+}
+
 function getRecordOptionByProvince(data) {
   var axis = {
     x: [],
@@ -464,7 +609,7 @@ function getRecordOptionByProvince(data) {
 
   return {
     title: {
-      text: '2015-2017全国各省市销售量'
+      text: '2015-2017全国各省市订单数'
     },
     tooltip: {
       trigger: 'axis'
@@ -496,22 +641,28 @@ function getRecordOptionByProvince(data) {
   };
 }
 
-function getRecordOption(data, title = '每日') {
+function getRecordOption(data, title = '每日', chartType = 'line') {
   var axis = {
     x: [],
-    y: []
+    y: [],
+    y2: []
   };
   data.forEach((item) => {
     axis.x.push(item._id);
-    axis.y.push(item.total);
+    axis.y.push(item.saleNum);
+    axis.y2.push((item.saleValue / 10000).toFixed(2));
   });
 
   return {
     title: {
-      text: title + '销售量'
+      text: title + '销售量及销售额对比'
     },
     tooltip: {
       trigger: 'axis'
+    },
+    legend: {
+      x: 'center',
+      data: ['销售量', '销售额']
     },
     grid: {
       left: '3%',
@@ -526,16 +677,26 @@ function getRecordOption(data, title = '每日') {
     },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
+      boundaryGap: chartType == 'bar',
       data: axis.x
     },
-    yAxis: {
-      type: 'value'
-    },
+    yAxis: [{
+      type: 'value',
+      splitLine: {
+        show: false
+      }
+    }, {
+      name: '销售额(万元)',
+      nameLocation: 'end',
+      type: 'value',
+      splitLine: {
+        show: false
+      }
+    }],
     dataZoom: [{
       type: 'inside',
       start: 0,
-      end: 30
+      end: 40
     }, {
       start: 0,
       end: 30,
@@ -551,67 +712,17 @@ function getRecordOption(data, title = '每日') {
     }],
     series: [{
       name: '销售量',
-      type: 'line',
+      type: chartType,
       data: axis.y,
-      smooth: true
-    }]
-  };
-}
-
-function getOption(arr, title, forcastId = 3) {
-  var data = {
-    x: [],
-    y: [],
-    y2: []
-  };
-  data.x = arr.map(function(item) {
-    return item.key;
-  });
-  arr.map(function(item, i) {
-    data.y.push(item.val);
-    data.y2.push(item.val);
-  });
-  data.y2[forcastId] = data.y2[forcastId] * 5.5;
-
-  return {
-    title: {
-      text: '各年' + title + '对比'
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['截止至2017-2-22', '2017年预估']
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    toolbox: {
-      feature: {
-        saveAsImage: {}
-      }
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.x
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [{
-      name: '截止至2017-2-22',
-      type: 'line',
-      data: data.y,
-      smooth: true
+      smooth: true,
+      maxWidth: 40
     }, {
-      name: '2017年预估',
-      type: 'line',
-      data: data.y2,
-      smooth: true
+      name: '销售额',
+      type: chartType,
+      yAxisIndex: 1,
+      data: axis.y2,
+      smooth: true,
+      maxWidth: 40
     }]
   };
 }

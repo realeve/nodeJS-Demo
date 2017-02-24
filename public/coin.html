@@ -26,18 +26,20 @@
   <div id="app" class="margin-top-20">
     <h3 class="margin-top-20">总结</h3>
     <p>截止至2017-2-22 17:00</p>
-    <p>销售额：￥{{sales.sum/10000}}万元</p>
-    <p>销售商品件数：{{sales.num}} 件</p>
+    <p>注册用户数: {{saleInfo.users}} 人以上</p>
+    <p>销售额：￥{{saleInfo.sum}}万元</p>
+    <p>销售商品件数：{{saleInfo.num}} 件</p>
+    <p>商品平均售价：{{saleInfo.avgPrice}} 元</p>
     <p>有效商品总数：{{sales.goodsNum}} 件</p>
-    <p>商品平均售价：{{sales.avgPrice}} 元</p>
     <h3 class="margin-top-20">销售额Top10</h3>
     <ul>
       <li v-for="item,i in popular.byValue" style="margin-top:10px;">
         No{{i+1}}: {{item.name}}
         <br> 单价: {{item.price}}
         <br> 销量: {{item.count}}
-        <br> 销售额: {{item.sales/10000}}万元
+        <br> 销售额: {{item.sales}}万元
         <br> 主题: {{item.theme}}
+        <br> <a target="_blank" :href="item.url">商品销售链接</a>
         <br> <img :src="item.img" style="height:200px;">
       </li>
     </ul>
@@ -47,47 +49,21 @@
         No{{i+1}}: {{item.name}}
         <br> 单价: {{item.price}}
         <br> 销量: {{item.count}}
-        <br> 销售额: {{item.sales/10000}}万元
+        <br> 销售额: {{item.sales}}万元
         <br> 主题: {{item.theme}}
+        <br> <a target="_blank" :href="item.url">商品销售链接</a>
         <br> <img :src="item.img" style="height:200px;">
       </li>
     </ul>
-    <h3 class="margin-top-20">各主题销量排行Top5</h3>
-    <ul>
-      <li v-for="item,i in static.theme.count" style="margin-top:10px;">
-        No{{i+1}}: {{item.key}}
-        <br> 销量: {{item.val}}
-      </li>
-    </ul>
-    <h3 class="margin-top-20">各主题销售额排行Top5</h3>
-    <ul>
-      <li v-for="item,i in static.theme.sale" style="margin-top:10px;">
-        No{{i+1}}: {{item.key}}
-        <br> 销售额: {{item.val/10000}}万元
-      </li>
-    </ul>
-    <h3 class="margin-top-20">各（产品）年份销量排行Top5</h3>
-    <ul>
-      <li v-for="item,i in static.year.count" style="margin-top:10px;">
-        No{{i+1}}: {{item.key}}
-        <br> 销量: {{item.val}}
-      </li>
-    </ul>
-    <h3 class="margin-top-20">各（产品）年份销售额排行Top5</h3>
-    <ul>
-      <li v-for="item,i in static.year.sale" style="margin-top:10px;">
-        No{{i+1}}: {{item.key}}
-        <br> 销售额: {{item.val/10000}}万元
-      </li>
-    </ul>
   </div>
+  <div id="chart6" class="chart"></div>
   <div id="chart0" class="chart"></div>
   <div id="chart1" class="chart"></div>
   <div id="chart2" class="chart"></div>
-  <div id="chart6" class="chart"></div>
   <div id="chart3" class="chart"></div>
   <div id="chart4" class="chart chart2"></div>
   <div id="chart5" class="chart chart2"></div>
+  <div id="chart7" class="chart chart2"></div>
   <p class="margin-top-20"></p>
   <script src="/js/lib/vue.js"></script>
   <script src="/js/lib/vuex.min.js"></script>
