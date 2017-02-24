@@ -1,0 +1,77 @@
+[{
+  "_id": "2015-08",
+  "saleValue": 338399,
+  "saleNum": 293
+}, {
+  "_id": "2015-09",
+  "saleValue": 198320,
+  "saleNum": 141
+}, {
+  "_id": "2015-10",
+  "saleValue": 2559102,
+  "saleNum": 13015
+}, {
+  "_id": "2015-11",
+  "saleValue": 14339690,
+  "saleNum": 7991
+}, {
+  "_id": "2015-12",
+  "saleValue": 21175298,
+  "saleNum": 3334
+}, {
+  "_id": "2016-01",
+  "saleValue": 44623844,
+  "saleNum": 125831
+}, {
+  "_id": "2016-02",
+  "saleValue": 5980568,
+  "saleNum": 678
+}, {
+  "_id": "2016-03",
+  "saleValue": 3745008,
+  "saleNum": 1080
+}, {
+  "_id": "2016-04",
+  "saleValue": 29233970,
+  "saleNum": 99395
+}, {
+  "_id": "2016-05",
+  "saleValue": 4759353,
+  "saleNum": 1462
+}, {
+  "_id": "2016-06",
+  "saleValue": 12938219,
+  "saleNum": 35470
+}, {
+  "_id": "2016-07",
+  "saleValue": 11130400,
+  "saleNum": 9655
+}, {
+  "_id": "2016-08",
+  "saleValue": 10997236,
+  "saleNum": 7616
+}, {
+  "_id": "2016-09",
+  "saleValue": 7155149,
+  "saleNum": 5385
+}, {
+  "_id": "2016-10",
+  "saleValue": 15039355,
+  "saleNum": 23945
+}, {
+  "_id": "2016-11",
+  "saleValue": 21051862,
+  "saleNum": 38575
+}, {
+  "_id": "2016-12",
+  "saleValue": 22487889,
+  "saleNum": 44213
+}, {
+  "_id": "2017-01",
+  "saleValue": 36683211,
+  "saleNum": 98491
+}, {
+  "_id": "2017-02",
+  "saleValue": 3856898,
+  "saleNum": 5353
+}]

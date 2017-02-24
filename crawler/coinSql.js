@@ -671,3 +671,52 @@ db.getCollection('trade').aggregate([{
 		}
 	}
 }]);
+
+
+//saleNumById
+db.getCollection('trade').aggregate([{
+  $match: {
+    "count": {
+      $gt: 0
+    }
+  }
+}, {
+  $lookup: {
+    from: "goods",
+    localField: "goodsId",
+    foreignField: "goodsId",
+    as: "goods"
+  }
+}, {
+  "$unwind": "$recordList"
+}, {
+  "$unwind": "$goods"
+}, {
+  $match: {
+    "recordList.handle_status": {
+      $ne: -6
+    },
+     "goodsId":68
+  }
+}, {
+  $project: {
+    datename: {
+      $substr: ["$recordList.access_date", 0, 10]
+    },
+    sales: {
+      $multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
+    },
+    _id: 0
+  }
+}, {
+  $group: {
+    _id: "$datename",
+    saleValue: {
+      $sum: "$sales"
+    }
+  }
+}, {
+  $sort: {
+    "_id": 1
+  }
+}]);
