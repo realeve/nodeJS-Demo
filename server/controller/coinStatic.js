@@ -291,10 +291,79 @@ function staticByTheme(req, res, next) {
   });
 }
 
+function saleDate(req, res, next) {
+  var col = db.collection('trade');
+  col.aggregate([{
+    $match: {
+      "count": {
+        $gt: 0
+      }
+    }
+  }, {
+    $lookup: {
+      from: "goods",
+      localField: "goodsId",
+      foreignField: "goodsId",
+      as: "goods"
+    }
+  }, {
+    "$unwind": "$recordList"
+  }, {
+    "$unwind": "$goods"
+  }, {
+    $match: {
+      "recordList.handle_status": {
+        $ne: -6
+      }
+    }
+  }, {
+    $project: {
+      datename: {
+        $substr: ["$recordList.access_date", 0, 10]
+      },
+      sales: {
+        $multiply: ["$goods.msg.shopPrice", "$recordList.quantity"]
+      },
+      name: "$goods.msg.goodsName",
+      _id: 0
+    }
+  }, {
+    $group: {
+      _id: {
+        name: "$name"
+      },
+      value: {
+        $min: "$datename"
+      }
+    }
+  }, {
+    $group: {
+      _id: "$value",
+      value: {
+        $sum: 1
+      }
+
+    }
+
+  }, {
+    $sort: {
+      "_id": 1
+    }
+  }], function(err, result) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    res.json(result);
+  });
+
+}
+
 module.exports = {
   date: staticByDate,
   province: staticByProvince,
   theme: staticByTheme,
   popular: staticByPopular,
-  goodsId: staticByGoodsId
+  goodsId: staticByGoodsId,
+  saleDate
 };

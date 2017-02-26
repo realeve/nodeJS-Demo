@@ -22,6 +22,10 @@ router.get('/static/theme', function(req, res, next) {
   coin.static.theme(req, res, next);
 });
 
+router.get('/static/saledate', function(req, res, next) {
+  coin.static.saleDate(req, res, next);
+});
+
 router.get('/static/province', function(req, res, next) {
   coin.static.province(req, res, next);
 });

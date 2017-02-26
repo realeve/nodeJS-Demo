@@ -1,4 +1,4 @@
-const CHART_NUM = 10;
+const CHART_NUM = 11;
 const store = new Vuex.Store({
   state: {}
 });
@@ -127,6 +127,12 @@ var app = new Vue({
       .then((res) => {
         var data = res.data;
         this.chart[5].setOption(getRecordMapOptionByProvince(data));
+      });
+
+    axios.get('/data/newProd.json')
+      .then((res) => {
+        console.log(res.data);
+        this.chart[11].setOption(getNewProdOption(res.data));
       });
   }
 });

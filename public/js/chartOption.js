@@ -446,5 +446,54 @@ function getDistribOption(data) {
       data: data.material
     }]
   };
+}
 
+function getNewProdOption(data) {
+  var axis = {
+    x: [],
+    y: []
+  };
+  data.forEach((item) => {
+    axis.x.push(item.name);
+    axis.y.push(item.value);
+  });
+
+  return {
+    title: {
+      text: '新品上架数量分布'
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '8%',
+      containLabel: true
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {}
+      }
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: axis.x
+    },
+    yAxis: [{
+      name: '新品上架数',
+      type: 'value',
+      splitLine: {
+        show: false
+      }
+    }],
+    series: [{
+      name: '新品上架数',
+      type: 'line',
+      data: axis.y,
+      smooth: true,
+      maxWidth: 40
+    }]
+  };
 }
