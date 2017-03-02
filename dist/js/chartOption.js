@@ -332,6 +332,92 @@ function getRecordOption(data, title = '每日', chartType = 'line') {
   };
 }
 
+function getRecordWithNewProdOption(data, scatterData) {
+  var axis = {
+    x: [],
+    y2: []
+  };
+  data.forEach((item) => {
+    axis.x.push(item._id);
+    axis.y2.push((item.saleValue / 10000).toFixed(2));
+  });
+
+  var scatter = scatterData.map(item => {
+    return [item.name, 1000, item.value];
+  });
+
+  return {
+    title: {
+      text: '销售额与新品上架数'
+    },
+    legend: {
+      x: 'center',
+      data: ['销售额']
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '8%',
+      containLabel: true
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {}
+      }
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: axis.x
+    },
+    yAxis: [{
+      name: '销售额(万元)',
+      nameLocation: 'end',
+      type: 'value',
+      splitLine: {
+        show: false
+      }
+    }],
+    dataZoom: [{
+      type: 'inside',
+      start: 0,
+      end: 100
+    }, {
+      start: 0,
+      end: 100,
+      handleIcon: 'M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+      handleSize: '80%',
+      handleStyle: {
+        color: '#fff',
+        shadowBlur: 3,
+        shadowColor: 'rgba(0, 0, 0, 0.6)',
+        shadowOffsetX: 2,
+        shadowOffsetY: 2
+      }
+    }],
+    tooltip: {
+      trigger: 'axis',
+      formatter(val) {
+        console.log(val);
+        return val[0].name + '<br>' + val[0].seriesName + ': ' + val[0].value + '<br>近期上架新品: ' + val[1].value[2];
+      }
+    },
+    series: [{
+      name: '销售额',
+      type: 'line',
+      data: axis.y2,
+      smooth: true
+    }, {
+      name: '新品数',
+      type: 'scatter',
+      data: scatter,
+      symbolSize: function(val) {
+        return val[2] * 3;
+      }
+    }]
+  };
+}
+
 function getGoodsOption(data, title) {
   var axis = {
     x: [],
@@ -446,5 +532,54 @@ function getDistribOption(data) {
       data: data.material
     }]
   };
+}
 
+function getNewProdOption(data) {
+  var axis = {
+    x: [],
+    y: []
+  };
+  data.forEach((item) => {
+    axis.x.push(item.name);
+    axis.y.push(item.value);
+  });
+
+  return {
+    title: {
+      text: '新品上架数量分布'
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '8%',
+      containLabel: true
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {}
+      }
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: axis.x
+    },
+    yAxis: [{
+      name: '新品上架数',
+      type: 'value',
+      splitLine: {
+        show: false
+      }
+    }],
+    series: [{
+      name: '新品上架数',
+      type: 'line',
+      data: axis.y,
+      smooth: true,
+      maxWidth: 40
+    }]
+  };
 }

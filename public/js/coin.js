@@ -1,4 +1,4 @@
-const CHART_NUM = 11;
+const CHART_NUM = 12;
 const store = new Vuex.Store({
   state: {}
 });
@@ -54,23 +54,6 @@ var app = new Vue({
         updatePopular(data, app.popular.byValue);
       });
 
-    //axios.get('/coin/static/theme')
-    axios.get('/data/bytheme.json')
-      .then((res) => {
-        var data = res.data;
-        var option = getRecordOption(data, '各主题', 'bar');
-        delete option.dataZoom;
-        this.chart[6].setOption(option);
-      });
-
-    axios.get('/data/saleByUser.json')
-      .then((res) => {
-        var data = res.data;
-        var option = getRecordOption(data, '消费金额Top50 会员');
-        //delete option.dataZoom;
-        this.chart[9].setOption(option);
-      });
-
     //产品分布 | 价格、主题、材质
     axios.get('/data/product-distrib.json')
       .then((response) => {
@@ -82,21 +65,13 @@ var app = new Vue({
         console.log(error);
       });
 
-    //axios.get('/coin/static/date/10')
-    axios.get('/data/byday.json')
+    //axios.get('/coin/static/theme')
+    axios.get('/data/bytheme.json')
       .then((res) => {
         var data = res.data;
-        var option = getRecordOption(data, '每日');
-        this.chart[3].setOption(option);
-      });
-
-    //axios.get('/coin/static/date/7')
-    axios.get('/data/bymonth.json')
-      .then((res) => {
-        var data = res.data;
-        var option = getRecordOption(data, '每月');
+        var option = getRecordOption(data, '各主题', 'bar');
         delete option.dataZoom;
-        this.chart[2].setOption(option);
+        this.chart[6].setOption(option);
       });
 
     //axios.get('/coin/static/date/4')
@@ -109,6 +84,37 @@ var app = new Vue({
         var option = getRecordOption(data, '每年');
         delete option.dataZoom;
         this.chart[1].setOption(option);
+      });
+
+    //axios.get('/coin/static/date/7')
+    axios.get('/data/bymonth.json')
+      .then((res) => {
+        var data = res.data;
+        var option = getRecordOption(data, '每月');
+        delete option.dataZoom;
+        this.chart[2].setOption(option);
+      });
+
+    //axios.get('/coin/static/date/10')
+    axios.get('/data/byday.json')
+      .then((res) => {
+        var data = res.data;
+        var option = getRecordOption(data, '每日');
+        this.chart[3].setOption(option);
+
+        axios.get('/data/newProd.json')
+          .then((res) => {
+            this.chart[11].setOption(getNewProdOption(res.data));
+            this.chart[12].setOption(getRecordWithNewProdOption(data, res.data));
+          });
+      });
+
+    axios.get('/data/saleByUser.json')
+      .then((res) => {
+        var data = res.data;
+        var option = getRecordOption(data, '消费金额Top50 会员');
+        //delete option.dataZoom;
+        this.chart[9].setOption(option);
       });
 
     //axios.get('/coin/static/province')
@@ -129,11 +135,6 @@ var app = new Vue({
         this.chart[5].setOption(getRecordMapOptionByProvince(data));
       });
 
-    axios.get('/data/newProd.json')
-      .then((res) => {
-        console.log(res.data);
-        this.chart[11].setOption(getNewProdOption(res.data));
-      });
   }
 });
 
